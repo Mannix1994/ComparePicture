@@ -1,0 +1,1 @@
+ls *.bmp | sort -t. -k1.1n
