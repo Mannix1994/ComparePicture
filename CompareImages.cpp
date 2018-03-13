@@ -14,7 +14,8 @@ CompareImages::CompareImages(const cv::Mat mat1, const cv::Mat mat2) :
     ASSERT(!mat1.empty(),"图片为空");
     ASSERT(mat1.size() == mat2.size(), "两图大小不一致");
     ASSERT(mat1.type() == mat2.type(), "两图类型不一致");
-    _mask = Mat(mat1.size(),CV_8UC3,Scalar(0,0,0));
+//    _mask = Mat(mat1.size(),CV_8UC3,Scalar(0,0,0));
+    _mask = mat1.clone();
     compare(mat1, mat2);
 }
 
@@ -35,7 +36,7 @@ void CompareImages::compare(const Mat mat1, const Mat mat2) {
                 } else {
                     _differentCount++;
                     _differentPoints.emplace_back(Point(i, j));
-                    _mask.at<Vec3b>(j, i) = Vec3b(0, 0, 255);
+                    _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
                 }
             }
         }
