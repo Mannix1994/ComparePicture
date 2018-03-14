@@ -25,7 +25,7 @@ int main( int argc, char** argv )
                        "\n"
                        "调用demo:\n"
                        "./ComparePicture -c 8 -t src.txt -s ./reportPath -p ./图片组1 ./图片组2\n\n\n"
-                       "按文件名数字排序命令：ls *.bmp | sort -t. -k1.1n\n\n"
+                       "按文件名数字排序命令：ls *.bmp | sort -t. -k1.1n >src.txt\n\n"
                        );
         return 0;
     }
