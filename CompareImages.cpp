@@ -28,32 +28,49 @@ bool CompareImages::same() {
 }
 
 void CompareImages::compare(const Mat mat1, const Mat mat2) {
-    if (mat1.type() == CV_8UC3) {
-        for (int i = 0; i < mat1.cols; i++) {
-            for (int j = 0; j < mat1.rows; j++) {
-                if (equal(mat1.at<Vec3b>(j, i), mat2.at<Vec3b>(j, i))) {
-                    _sameCount++;
-                } else {
-                    _differentCount++;
-                    _differentPoints.emplace_back(Point(i, j));
-                    _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
+    switch (mat1.type()){
+        case CV_8UC3:
+            for (int i = 0; i < mat1.cols; i++) {
+                for (int j = 0; j < mat1.rows; j++) {
+                    if (equal(mat1.at<Vec3b>(j, i), mat2.at<Vec3b>(j, i))) {
+                        _sameCount++;
+                    } else {
+                        _differentCount++;
+                        _differentPoints.emplace_back(Point(i, j));
+                        _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
+                    }
                 }
             }
-        }
-    } else if (mat1.type() == CV_8UC1) {
-        for (int i = 0; i < mat1.cols; i++) {
-            for (int j = 0; j < mat1.rows; j++) {
-                if (mat1.at<uchar>(j, i) == mat2.at<uchar>(j, i)) {
-                    _sameCount++;
-                } else {
-                    _differentCount++;
-                    _differentPoints.emplace_back(Point(i, j));
-                    _mask.at<uchar>(j, i) = 255;
+            break;
+        case CV_8UC1:
+            for (int i = 0; i < mat1.cols; i++) {
+                for (int j = 0; j < mat1.rows; j++) {
+                    if (mat1.at<uchar>(j, i) == mat2.at<uchar>(j, i)) {
+                        _sameCount++;
+                    } else {
+                        _differentCount++;
+                        _differentPoints.emplace_back(Point(i, j));
+                        _mask.at<uchar>(j, i) = 255;
+                    }
                 }
             }
-        }
-    } else {
-        ASSERT(false, "不支持的图片类型");
+            break;
+        case CV_32FC2:
+            for (int i = 0; i < mat1.cols; i++) {
+                for (int j = 0; j < mat1.rows; j++) {
+                    if (equal(mat1.at<Vec2f>(j, i), mat2.at<Vec2f>(j, i))) {
+                        _sameCount++;
+                    } else {
+                        _differentCount++;
+                        _differentPoints.emplace_back(Point(i, j));
+                        _mask.at<Vec2f>(j, i) = Vec2f(0, 0);
+                    }
+                }
+            }
+            break;
+        default:
+            ASSERT(false, "不支持的图片类型");
+            break;
     }
 
     if (_differentCount > 0) {
@@ -65,6 +82,10 @@ cv::Mat CompareImages::mask() {
     return _mask;
 }
 
-bool CompareImages::equal(cv::Vec3b a, cv::Vec3b b) {
+inline bool CompareImages::equal(cv::Vec3b a, cv::Vec3b b) {
     return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
+}
+
+inline bool CompareImages::equal(cv::Vec2f a, cv::Vec2f b) {
+    return abs(a[0]-b[0])<1e-5 && abs(a[1]-b[1])<1e-5;
 }

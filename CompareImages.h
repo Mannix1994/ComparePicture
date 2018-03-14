@@ -16,7 +16,8 @@ public:
 
 private:
     void compare(cv::Mat mat1, cv::Mat mat2);
-    bool equal(cv::Vec3b a,cv::Vec3b b);
+    inline bool equal(cv::Vec3b a, cv::Vec3b b);
+    inline bool equal(cv::Vec2f a, cv::Vec2f b);
 
 private:
     long long _sameCount;
