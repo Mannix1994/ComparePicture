@@ -3,7 +3,7 @@
 #include <fstream>
 #include <map>
 #include "tools.h"
-#include "CompareImages.h"
+#include "CompareMats.h"
 
 using namespace std;
 using namespace cv;
@@ -148,13 +148,11 @@ int str2int(string str){
 
 /**
  * 合并count组图片;
- * @param count 合并图片的组数
- * @param m 横向m张图片
- * @param n 纵向n张图片
+ * @param count 要比对图片的组数
  * @param txtName 各个文件夹中指定文件名的txt文件;
  * 得到这个文件可以通过运行以下命令：ls | sort -t. -k1.1n >src.txt
- * @param paths 指定要合并图片的路径
- * @param savePath 保存路径
+ * @param reportPath 比对报告保存路径
+ * @param paths 指定要比对的来那个个路径
  */
 void compare(int count,string txtName,string reportPath,vector<string> paths){
 
@@ -179,7 +177,7 @@ void compare(int count,string txtName,string reportPath,vector<string> paths){
 //        cout<<path1<<path2<<endl;
         Mat mat1 = imread(path1);
         Mat mat2 = imread(path2);
-        CompareImages ci(mat1,mat2);
+        CompareMats ci(mat1,mat2);
         cout<<"第"<<i+1<<":"<<ci.report()<<endl;
         o<<"第"<<i+1<<":"<<ci.report()<<endl;
         imwrite(reportPath+"/"+to_string(i+1)+".bmp",ci.mask());

@@ -2,14 +2,14 @@
 // Created by creator on 18-3-13.
 //
 
-#include "CompareImages.h"
+#include "CompareMats.h"
 #include "tools.h"
 
 using namespace cv;
 using namespace std;
 
 
-CompareImages::CompareImages(const cv::Mat mat1, const cv::Mat mat2) :
+CompareMats::CompareMats(const cv::Mat mat1, const cv::Mat mat2) :
         _sameCount(0), _differentCount(0), _same(true) {
     ASSERT(!mat1.empty(),"图片为空");
     ASSERT(mat1.size() == mat2.size(), "两图大小不一致");
@@ -18,15 +18,15 @@ CompareImages::CompareImages(const cv::Mat mat1, const cv::Mat mat2) :
     compare(mat1, mat2);
 }
 
-std::string CompareImages::report() {
+std::string CompareMats::report() {
     return "是否相同:" + to_string(_same) + ", 相同点数量:" + to_string(_sameCount) + ", 不同点数量:" + to_string(_differentCount);
 }
 
-bool CompareImages::same() {
+bool CompareMats::same() {
     return _same;
 }
 
-void CompareImages::compare(const Mat mat1, const Mat mat2) {
+void CompareMats::compare(const Mat mat1, const Mat mat2) {
     switch (mat1.type()){
         case CV_8UC3://uchar3
             for (int i = 0; i < mat1.cols; i++) {
@@ -104,14 +104,26 @@ void CompareImages::compare(const Mat mat1, const Mat mat2) {
     }
 }
 
-cv::Mat CompareImages::mask() {
+Mat CompareMats::mask() {
     return _mask;
 }
 
-inline bool CompareImages::equal(cv::Vec3b a, cv::Vec3b b) {
+inline bool CompareMats::equal(cv::Vec3b a, cv::Vec3b b) {
     return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
 }
 
-inline bool CompareImages::equal(cv::Vec2f a, cv::Vec2f b) {
+inline bool CompareMats::equal(cv::Vec2f a, cv::Vec2f b) {
     return abs(a[0]-b[0])<1e-5 && abs(a[1]-b[1])<1e-5;
+}
+
+vector<cv::Point> CompareMats::points() {
+    return _differentPoints;
+}
+
+long long CompareMats::sameCount() {
+    return _sameCount;
+}
+
+long long CompareMats::differentCount() {
+    return _differentCount;
 }
