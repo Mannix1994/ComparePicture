@@ -180,8 +180,8 @@ void compare(int count,string txtName,string reportPath,vector<string> paths){
         Mat mat1 = imread(path1);
         Mat mat2 = imread(path2);
         CompareImages ci(mat1,mat2);
-        cout<<ci.report()<<endl;
-        o<<"序号"<<i+1<<":"<<ci.report()<<endl;
+        cout<<"第"<<i+1<<":"<<ci.report()<<endl;
+        o<<"第"<<i+1<<":"<<ci.report()<<endl;
         imwrite(reportPath+"/"+to_string(i+1)+".bmp",ci.mask());
     }
 
