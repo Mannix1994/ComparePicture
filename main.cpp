@@ -180,7 +180,8 @@ void compare(int count,string txtName,string reportPath,vector<string> paths){
         CompareMats ci(mat1,mat2);
         cout<<"第"<<i+1<<":"<<ci.report()<<endl;
         o<<"第"<<i+1<<":"<<ci.report()<<endl;
-        imwrite(reportPath+"/"+to_string(i+1)+".bmp",ci.mask());
+//        imwrite(+".bmp",ci.mask());
+        ci.saveReport(reportPath+"/"+to_string(i+1));
     }
 
     nameStreams[0].close();

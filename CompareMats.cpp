@@ -4,6 +4,7 @@
 
 #include "CompareMats.h"
 #include "tools.h"
+#include <fstream>
 
 using namespace cv;
 using namespace std;
@@ -11,14 +12,18 @@ using namespace std;
 
 CompareMats::CompareMats(const cv::Mat mat1, const cv::Mat mat2) :
         _sameCount(0), _differentCount(0), _same(true) {
-    ASSERT(!mat1.empty(),"图片为空");
+    ASSERT(!mat1.empty(), "图片为空");
     ASSERT(mat1.size() == mat2.size(), "两图大小不一致");
     ASSERT(mat1.type() == mat2.type(), "两图类型不一致");
     compare(mat1, mat2);
 }
 
 std::string CompareMats::report() {
-    return "是否相同:" + to_string(_same) + ", 相同点数量:" + to_string(_sameCount) + ", 不同点数量:" + to_string(_differentCount);
+    if(_same)
+        return "是否相同:是, 相同点数量:" + to_string(_sameCount) + ", 不同点数量:" + to_string(_differentCount);
+    else
+        return "是否相同:否, 相同点数量:" + to_string(_sameCount) + ", 不同点数量:" + to_string(_differentCount);
+
 }
 
 bool CompareMats::same() {
@@ -26,7 +31,7 @@ bool CompareMats::same() {
 }
 
 void CompareMats::compare(const Mat mat1, const Mat mat2) {
-    switch (mat1.type()){
+    switch (mat1.type()) {
         case CV_8UC3://uchar3
         {
             _mask = mat1.clone();
@@ -133,7 +138,7 @@ inline bool CompareMats::equal(cv::Vec3b a, cv::Vec3b b) {
 }
 
 inline bool CompareMats::equal(cv::Vec2f a, cv::Vec2f b) {
-    return abs(a[0]-b[0])<1e-5 && abs(a[1]-b[1])<1e-5;
+    return abs(a[0] - b[0]) < 1e-5 && abs(a[1] - b[1]) < 1e-5;
 }
 
 vector<cv::Point> CompareMats::points() {
@@ -146,4 +151,30 @@ long long CompareMats::sameCount() {
 
 long long CompareMats::differentCount() {
     return _differentCount;
+}
+
+void CompareMats::saveReport(std::string fileName) {
+    ofstream o(fileName+".txt");
+
+    ASSERT(o.is_open(), "新建文件失败");
+
+    o << report() << endl;
+
+    if (_differentPoints.empty()) {
+        o.close();
+        return;
+    }
+
+    o << "不同点坐标:" << endl;
+
+    for (int i = 0; i < _differentPoints.size(); i++) {
+        o << _differentPoints[i] << ",\t";
+        if ((i+1) % 10 == 0)//存10个点就换行
+            o << endl;
+    }
+    o.close();
+
+    imwrite(fileName+".bmp",_mask);
+    
+    cout<<"报告已保存到"+fileName+".txt和"+fileName+".bmp"<<endl;
 }

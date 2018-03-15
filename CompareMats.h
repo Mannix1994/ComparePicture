@@ -36,6 +36,11 @@ public:
      */
     std::vector<cv::Point> points();
     /**
+     * 保存不同点的坐标
+     * @param fileName 文件名
+     */
+    void saveReport(std::string fileName);
+    /**
      * 返回相同点的数量
      * @return 大于等于0的值
      */
