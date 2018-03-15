@@ -147,7 +147,7 @@ int str2int(string str){
 }
 
 /**
- * 合并count组图片;
+ * 比对count组图片;
  * @param count 要比对图片的组数
  * @param txtName 各个文件夹中指定文件名的txt文件;
  * 得到这个文件可以通过运行以下命令：ls | sort -t. -k1.1n >src.txt
