@@ -14,7 +14,6 @@ CompareMats::CompareMats(const cv::Mat mat1, const cv::Mat mat2) :
     ASSERT(!mat1.empty(),"图片为空");
     ASSERT(mat1.size() == mat2.size(), "两图大小不一致");
     ASSERT(mat1.type() == mat2.type(), "两图类型不一致");
-    _mask = Mat(mat1.size(),CV_8UC3,Scalar(0,0,0));
     compare(mat1, mat2);
 }
 
@@ -29,6 +28,8 @@ bool CompareMats::same() {
 void CompareMats::compare(const Mat mat1, const Mat mat2) {
     switch (mat1.type()){
         case CV_8UC3://uchar3
+        {
+            _mask = mat1.clone();
             for (int i = 0; i < mat1.cols; i++) {
                 for (int j = 0; j < mat1.rows; j++) {
                     if (equal(mat1.at<Vec3b>(j, i), mat2.at<Vec3b>(j, i))) {
@@ -36,12 +37,21 @@ void CompareMats::compare(const Mat mat1, const Mat mat2) {
                     } else {
                         _differentCount++;
                         _differentPoints.emplace_back(Point(i, j));
-                        _mask.at<Vec3b>(j, i) = Vec3b(0, 0, 255);
+                        _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
                     }
                 }
             }
             break;
+        }
         case CV_8UC1://uchar
+        {
+            //合并为三通道的图像
+            vector<Mat> masks;
+            masks.push_back(mat1);
+            masks.push_back(mat1);
+            masks.push_back(mat1);
+            merge(masks, _mask);
+
             for (int i = 0; i < mat1.cols; i++) {
                 for (int j = 0; j < mat1.rows; j++) {
                     if (mat1.at<uchar>(j, i) == mat2.at<uchar>(j, i)) {
@@ -49,13 +59,16 @@ void CompareMats::compare(const Mat mat1, const Mat mat2) {
                     } else {
                         _differentCount++;
                         _differentPoints.emplace_back(Point(i, j));
-                        _mask.at<Vec3b>(j, i) = Vec3b(0, 0, 255);
+                        _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
 
                     }
                 }
             }
             break;
+        }
         case CV_32FC2://float2
+        {
+            _mask = Mat(mat1.size(), CV_8UC3, Scalar(0, 0, 0));
             for (int i = 0; i < mat1.cols; i++) {
                 for (int j = 0; j < mat1.rows; j++) {
                     if (equal(mat1.at<Vec2f>(j, i), mat2.at<Vec2f>(j, i))) {
@@ -63,37 +76,44 @@ void CompareMats::compare(const Mat mat1, const Mat mat2) {
                     } else {
                         _differentCount++;
                         _differentPoints.emplace_back(Point(i, j));
-                        _mask.at<Vec3b>(j, i) = Vec3b(0, 0, 255);
+                        _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
                     }
                 }
             }
             break;
+        }
         case CV_32FC1://float
+        {
+            _mask = Mat(mat1.size(), CV_8UC3, Scalar(0, 0, 0));
             for (int i = 0; i < mat1.cols; i++) {
                 for (int j = 0; j < mat1.rows; j++) {
-                    if (abs(mat1.at<float>(j, i)-mat2.at<float>(j, i))<1e-5) {
+                    if (abs(mat1.at<float>(j, i) - mat2.at<float>(j, i)) < 1e-5) {
                         _sameCount++;
                     } else {
                         _differentCount++;
                         _differentPoints.emplace_back(Point(i, j));
-                        _mask.at<Vec3b>(j, i) = Vec3b(0, 0, 255);
+                        _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
                     }
                 }
             }
             break;
+        }
         case CV_32SC1://int
+        {
+            _mask = Mat(mat1.size(), CV_8UC3, Scalar(0, 0, 0));
             for (int i = 0; i < mat1.cols; i++) {
                 for (int j = 0; j < mat1.rows; j++) {
-                    if (mat1.at<int>(j, i)==mat2.at<int>(j, i)) {
+                    if (mat1.at<int>(j, i) == mat2.at<int>(j, i)) {
                         _sameCount++;
                     } else {
                         _differentCount++;
                         _differentPoints.emplace_back(Point(i, j));
-                        _mask.at<Vec3b>(j, i) = Vec3b(0, 0, 255);
+                        _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
                     }
                 }
             }
             break;
+        }
         default:
             ASSERT(false, "不支持的Mat类型");
             break;
