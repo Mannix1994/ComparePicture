@@ -12,7 +12,9 @@ using namespace std;
 
 CompareMats::CompareMats(cv::Mat mat0,const cv::Mat mat1, const cv::Mat mat2) :
         _sameCount(0), _differentCount(0), _same(true) {
-    ASSERT(!mat0.empty(), "图片为空");
+    ASSERT(!mat0.empty(), "mat0指定的图片为空");
+    ASSERT(!mat1.empty(), "mat1指定的图片为空");
+    ASSERT(!mat2.empty(), "mat2指定的图片为空");
     ASSERT(mat0.size() == mat1.size() && mat1.size() == mat2.size(), "图的大小不一致");
     ASSERT(mat0.type() == mat1.type() && mat1.type() == mat2.type(), "图的类型不一致");
     _origin = mat0;

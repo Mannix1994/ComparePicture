@@ -1,6 +1,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <fstream>
+#include <unistd.h>
 #include <map>
 #include "tools.h"
 #include "CompareMats.h"
@@ -153,6 +154,12 @@ int str2int(string str){
     return num;
 }
 
+string getRealPath(string path){
+    char buffer[500];
+    getcwd(buffer,500);
+    return string(buffer)+"/"+path;
+}
+
 /**
  * 比对count组图片;
  * @param count 要比对图片的组数
@@ -175,13 +182,21 @@ void compare(int count,string reportPath,vector<string> paths){
     string name0,name1,name2;
     ofstream o(reportPath+"/统计.txt");
     for(int i=0;i<count;i++){
-        nameStreams[0]>>name0;
-        nameStreams[1]>>name1;
-        nameStreams[2]>>name2;
+
+        getline(nameStreams[0],name0);
+        getline(nameStreams[1],name1);
+        getline(nameStreams[2],name2);
+
+//        name0 = getRealPath(name0);
+//        cout<<name0<<endl<<name1<<endl<<name2<<endl;
 
         Mat mat0 = imread(name0);
         Mat mat1 = imread(name1);
         Mat mat2 = imread(name2);
+
+        ASSERT(!mat0.empty(), "不存在："+name0);
+        ASSERT(!mat1.empty(), "不存在："+name1);
+        ASSERT(!mat2.empty(), "不存在："+name2);
 
         CompareMats ci(mat0,mat1,mat2);
         cout<<"第"<<i+1<<":"<<ci.report()<<endl;
