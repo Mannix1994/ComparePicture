@@ -34,12 +34,29 @@ int main( int argc, char** argv )
                        "更改为其他类型)\n");
         printf("生成脚本getNames.sh中:\n");
         ofstream o("getNames.sh");
-        o<<"#!/usr/bin/env bash"<<endl;
-        o<<"rm src.txt"<<endl;
-        o<<"for a in $(ls *.bmp|sort -t. -k1.1n);"<<endl;
-        o<<"do"<<endl;
-        o<<"    echo $PWD/$a >>src.txt"<<endl;
-        o<<"done"<<endl;
+        o<< "#!/usr/bin/env bash\n"
+            "\n"
+            "if [ $# = 0 ];then\n"
+            "   echo './getSrcTxt.sh path(图片目录相对路径)'\n"
+            "else \n"
+            "   if [ $# = 1 ];then\n"
+            "       if [ -f \"$1/src.txt\" ];\n"
+            "       then\n"
+            "           rm \"$1/src.txt\"\n"
+            "       fi\n"
+            "\n"
+            "       cd \"$1\"\n"
+            "\n"
+            "       for a in $(ls *.bmp|sort -t. -k1.1n);\n"
+            "       do\n"
+            "           echo \"$PWD/$a\" >>src.txt\n"
+            "       done\n"
+            "\n"
+            "       cd ..\n"
+            "   else\n"
+            "       echo '参数太多。如果路径中间有空格，请用在路径开头和结尾打上英文双引号。'\n"
+            "   fi\n"
+            "fi"<<endl;
         o.close();
         system("chmod +x getNames.sh");
         printf("生成完成\n");
