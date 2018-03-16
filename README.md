@@ -1,6 +1,9 @@
 
 ## 一、比对图片
-将n组图片两两比较，并输出比较结果。
+将两组图片两两比较，如果对应点不同，则和未处理过的原图
+进行对比，若处理过的两组图都和原图对应点不同，标记为黄
+色;第一组和原图相同而第二组不同，标记为绿色;否则标记为
+蓝色。
 
 ## 二、如何使用
 
@@ -9,23 +12,23 @@
 cd run
 cmake ..
 make
-./ComparePicture -c 8 -t src.txt -s ./reportPath -p ./图片组1 ./图片组2
+./ComparePicture -n 8 -s ./report -p ./原图/src.txt ./图片组1/src.txt ./图片组2/src.txt
 ```
 执行完上面的命令没有报错，说明程序已经可以正常运行。
 * 调用方法  
 ```
-./ComparePicture -c count -t txtName -s reportPath -p path1 path2
+./ComparePicture -n number -s reportPath -p path0.txt path1.txt path2.txt
 ```
 * 参数解释  
--c 要比对的图片数量;    
--t -t path1和path2目录中含有目录中图片名字的txt文
-件名，每个目录中的txt名字都需要相同;  
--s 指定比对报告保存路径;  
--p 指定两组图片的路径,必须为最后一个参数。  
+-n number 要比对的图片数量;    
+-s save_path 指定比对报告保存路径; 
+-p path0.txt是原图相对于当前目录的图片路径，一张
+图片的路径为一行;path1.txt和path2.txt分别指定要
+比对的两组图片的路径。-p必须为最后一个参数.  
 
 * 调用demo:  
 ```
-./ComparePicture -c 8 -t src.txt -s ./reportPath -p ./图片组1 ./图片组2
+./ComparePicture -n 8 -s ./report -p ./原图/src.txt ./图片组1/src.txt ./图片组2/src.txt
 ```
 
 ## 三、关于作者

@@ -9,22 +9,24 @@ using namespace std;
 using namespace cv;
 
 int str2int(string str);
-void compare(int count,string txtName,string reportPath,vector<string> paths);
+void compare(int count,string reportPath,vector<string> paths);
 void parse(int argc,char** argv,map<string,vector<string>> &args);
 
 int main( int argc, char** argv )
 {
     if(argc==1){
-        printf("调用方法: ./ComparePicture -c count -t txtName -s reportPath -p path1 path2\n"
+        printf("调用方法: ./ComparePicture -n number -s reportPath -p path0.txt path1.txt path2.txt\n"
                        "\n"
-                       "-c 要比对的图片数量;\n"
-                       "-t path1和path2目录中含有目录中图片名字的txt文件名，每个目\n"
-                       "录中的txt名字都需要相同;\n"
-                       "-s 指定比对报告保存路径;\n"
-                       "-p 指定两组图片的路径,必须为最后一个参数.\n"
+                       "-n number 要比对的图片数量;\n"
+                       "-s save_path 指定比对报告保存路径;\n"
+                       "-p path0.txt是原图相对于当前目录的图片路径，\n"
+                       "一张图片的路径为一行;path1.txt和path2.txt\n"
+                       "分别指定要比对的两组图片的路径。-p必须为最后一\n"
+                       "个参数.\n"
                        "\n"
                        "调用demo:\n"
-                       "./ComparePicture -c 8 -t src.txt -s ./reportPath -p ./图片组1 ./图片组2\n\n\n"
+                       "./ComparePicture -n 8 -s ./report -p ./原图/src.txt "
+                       "./图片组1/src.txt ./图片组2/src.txt\n\n\n"
                        "按文件名数字排序命令：ls *.bmp | sort -t. -k1.1n >src.txt\n\n"
                        );
         return 0;
@@ -48,11 +50,8 @@ int main( int argc, char** argv )
 #endif
 
     //提取参数
-    auto count = str2int(args["-c"][0]);
-    ASSERT(count>0,"合并的图片组数数量小于1");
-
-    string txtName = args["-t"][0];
-//    cout<<txtName<<endl;
+    auto count = str2int(args["-n"][0]);
+    ASSERT(count>0,"要比对的图片组数数量小于1");
 
     //提取路径
     vector<string> paths = args["-p"];
@@ -61,7 +60,7 @@ int main( int argc, char** argv )
 //    }
 //    cout<<endl;
 
-    compare(count,txtName,reportPath,paths);
+    compare(count,reportPath,paths);
 
     return 0;
 }
@@ -75,22 +74,16 @@ int main( int argc, char** argv )
 void parse(int argc,char** argv,map<string,vector<string>> &args){
 
     //检查参数数量
-    ASSERT(argc>9,"参数数量不足");
+    ASSERT(argc==9,"参数数量不正确");
 
     for(int i=1;i<argc;i++){
         if(argv[i][0]=='-'){
 
-            if(strcmp(argv[i],"-c")==0){//count
-                ASSERT(args.count("-c")==0,"参数-c重复");
+            if(strcmp(argv[i],"-n")==0){//count
+                ASSERT(args.count("-n")==0,"参数-c重复");
                 vector<string> value;
                 value.emplace_back(argv[++i]);
-                args.insert(make_pair("-c",value));
-            }
-            else if(strcmp(argv[i],"-t")==0){//txt name
-                ASSERT(args.count("-t")==0,"参数-t重复");
-                vector<string> value;
-                value.emplace_back(argv[++i]);
-                args.insert(make_pair("-t",value));
+                args.insert(make_pair("-n",value));
             }
             else if(strcmp(argv[i],"-s")==0){//save path
                 ASSERT(args.count("-s")==0,"参数-s重复");
@@ -103,6 +96,7 @@ void parse(int argc,char** argv,map<string,vector<string>> &args){
                 vector<string> value;
                 for(int j=++i;j<argc;j++)
                     value.emplace_back(argv[j]);
+                ASSERT(value.size()==3,"输入路径不等于三个");
                 args.insert(make_pair("-p",value));
                 break;
             }
@@ -111,7 +105,7 @@ void parse(int argc,char** argv,map<string,vector<string>> &args){
         }
     }
 
-    if(args.size()<4){
+    if(args.size()<3){
         throw runtime_error("参数数量不足");
     }
 }
@@ -152,38 +146,37 @@ int str2int(string str){
  * @param txtName 各个文件夹中指定文件名的txt文件;
  * 得到这个文件可以通过运行以下命令：ls | sort -t. -k1.1n >src.txt
  * @param reportPath 比对报告保存路径
- * @param paths 指定要比对的来那个个路径
+ * @param paths[0]原图路径，path[1]和path[2]指定要比对的路径
  */
-void compare(int count,string txtName,string reportPath,vector<string> paths){
-
-    ASSERT(paths.size()==2,"指定的路径数量超过m*n");
+void compare(int count,string reportPath,vector<string> paths){
 
     //初始化各个文件夹内指定图片名字的txt文件的输入流
     vector<ifstream> nameStreams;
     for(int i=0;i<paths.size();i++){
-        nameStreams.emplace_back(ifstream(paths[i]+"/"+txtName,ios::in));
+        nameStreams.emplace_back(ifstream(paths[i],ios::in));
         if(!nameStreams[i].is_open()){
-            throw runtime_error("打开文件\""+paths[i]+"/"+txtName+"\"异常，请检查该文件是否存在");
+            throw runtime_error("打开文件\""+paths[i]+"\"异常，请检查该文件是否存在");
         }
     }
 
-    string name1,name2;
+    string name0,name1,name2;
     ofstream o(reportPath+"/统计.txt");
     for(int i=0;i<count;i++){
-        nameStreams[0]>>name1;
-        nameStreams[1]>>name2;
-        string path1=paths[0]+"/"+name1;
-        string path2=paths[1]+"/"+name2;
-//        cout<<path1<<path2<<endl;
-        Mat mat1 = imread(path1);
-        Mat mat2 = imread(path2);
-        CompareMats ci(mat1,mat2);
+        nameStreams[0]>>name0;
+        nameStreams[1]>>name1;
+        nameStreams[2]>>name2;
+
+        Mat mat0 = imread(name0);
+        Mat mat1 = imread(name1);
+        Mat mat2 = imread(name2);
+
+        CompareMats ci(mat0,mat1,mat2);
         cout<<"第"<<i+1<<":"<<ci.report()<<endl;
         o<<"第"<<i+1<<":"<<ci.report()<<endl;
-//        imwrite(+".bmp",ci.mask());
         ci.saveReport(reportPath+"/"+to_string(i+1));
     }
 
     nameStreams[0].close();
     nameStreams[1].close();
+    nameStreams[2].close();
 }
