@@ -27,8 +27,21 @@ int main( int argc, char** argv )
                        "调用demo:\n"
                        "./ComparePicture -n 8 -s ./report -p ./原图/src.txt "
                        "./图片组1/src.txt ./图片组2/src.txt\n\n\n"
-                       "按文件名数字排序命令：ls *.bmp | sort -t. -k1.1n >src.txt\n\n"
                        );
+        printf("获取以上提到的txt文件，可在图片目录运行getNames.sh，"
+                       "图片需要用数字命名且格式需要为bmp(也可在脚本中"
+                       "更改为其他类型)\n");
+        printf("生成脚本getNames.sh中:\n");
+        ofstream o("getNames.sh");
+        o<<"#!/usr/bin/env bash"<<endl;
+        o<<"rm src.txt"<<endl;
+        o<<"for a in $(ls *.bmp|sort -t. -k1.1n);"<<endl;
+        o<<"do"<<endl;
+        o<<"    echo $PWD/$a >>src.txt"<<endl;
+        o<<"done"<<endl;
+        o.close();
+        system("chmod +x getNames.sh");
+        printf("生成完成\n");
         return 0;
     }
 
