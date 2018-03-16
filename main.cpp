@@ -10,56 +10,14 @@ using namespace std;
 using namespace cv;
 
 int str2int(string str);
+void help();
 void compare(int count,string reportPath,vector<string> paths);
 void parse(int argc,char** argv,map<string,vector<string>> &args);
 
 int main( int argc, char** argv )
 {
     if(argc==1){
-        printf("调用方法: ./ComparePicture -n number -s reportPath -p path0.txt path1.txt path2.txt\n"
-                       "\n"
-                       "-n number 要比对的图片数量;\n"
-                       "-s save_path 指定比对报告保存路径;\n"
-                       "-p path0.txt是原图相对于当前目录的图片路径，\n"
-                       "一张图片的路径为一行;path1.txt和path2.txt\n"
-                       "分别指定要比对的两组图片的路径。-p必须为最后一\n"
-                       "个参数.\n"
-                       "\n"
-                       "调用demo:\n"
-                       "./ComparePicture -n 8 -s ./report -p ./原图/src.txt "
-                       "./图片组1/src.txt ./图片组2/src.txt\n\n\n"
-                       );
-        printf("获取以上提到的txt文件，可在图片目录运行getNames.sh，"
-                       "图片需要用数字命名且格式需要为bmp(也可在脚本中"
-                       "更改为其他类型)\n");
-        printf("生成脚本getNames.sh中:\n");
-        ofstream o("getNames.sh");
-        o<< "#!/usr/bin/env bash\n"
-            "\n"
-            "if [ $# = 0 ];then\n"
-            "   echo './getSrcTxt.sh path(图片目录相对路径)'\n"
-            "else \n"
-            "   if [ $# = 1 ];then\n"
-            "       if [ -f \"$1/src.txt\" ];\n"
-            "       then\n"
-            "           rm \"$1/src.txt\"\n"
-            "       fi\n"
-            "\n"
-            "       cd \"$1\"\n"
-            "\n"
-            "       for a in $(ls *.bmp|sort -t. -k1.1n);\n"
-            "       do\n"
-            "           echo \"$PWD/$a\" >>src.txt\n"
-            "       done\n"
-            "\n"
-            "       cd ..\n"
-            "   else\n"
-            "       echo '参数太多。如果路径中间有空格，请用在路径开头和结尾打上英文双引号。'\n"
-            "   fi\n"
-            "fi"<<endl;
-        o.close();
-        system("chmod +x getNames.sh");
-        printf("生成完成\n");
+        help();
         return 0;
     }
 
@@ -94,6 +52,53 @@ int main( int argc, char** argv )
     compare(count,reportPath,paths);
 
     return 0;
+}
+
+void help(){
+    printf("调用方法: ./ComparePicture -n number -s reportPath -p path0.txt path1.txt path2.txt\n"
+                   "\n"
+                   "-n number 要比对的图片数量;\n"
+                   "-s save_path 指定比对报告保存路径;\n"
+                   "-p path0.txt是原图相对于当前目录的图片路径，\n"
+                   "一张图片的路径为一行;path1.txt和path2.txt\n"
+                   "分别指定要比对的两组图片的路径。-p必须为最\n后一"
+                   "个参数.\n"
+                   "\n"
+                   "调用demo:\n"
+                   "./ComparePicture -n 8 -s ./report -p ./原图/src.txt "
+                   "./图片组1/src.txt ./图片组2/src.txt\n\n\n"
+    );
+    printf("获取以上提到的txt文件，运行getNames.sh获得;"
+                   "图片需要用数字命名且格式需要为bmp(也可在脚本中"
+                   "更改为其他类型)\n");
+    printf("生成脚本getNames.sh中:\n");
+    ofstream o("getNames.sh");
+    o<< "#!/usr/bin/env bash\n"
+            "\n"
+            "if [ $# = 0 ];then\n"
+            "   echo '调用方法:./getSrcTxt.sh path(图片目录相对路径)'\n"
+            "else \n"
+            "   if [ $# = 1 ];then\n"
+            "       if [ -f \"$1/src.txt\" ];\n"
+            "       then\n"
+            "           rm \"$1/src.txt\"\n"
+            "       fi\n"
+            "\n"
+            "       cd \"$1\"\n"
+            "\n"
+            "       for a in $(ls *.bmp|sort -t. -k1.1n);\n"
+            "       do\n"
+            "           echo \"$PWD/$a\" >>src.txt\n"
+            "       done\n"
+            "\n"
+            "       cd ..\n"
+            "   else\n"
+            "       echo '参数太多。如果路径中间有空格，请用在路径开头和结尾打上英文双引号。'\n"
+            "   fi\n"
+            "fi"<<endl;
+    o.close();
+    system("chmod +x getNames.sh");
+    printf("生成完成\n");
 }
 
 /**
