@@ -190,7 +190,7 @@ string getRealPath(string path){
  * 比对count组图片;
  * @param count 要比对图片的组数
  * @param txtName 各个文件夹中指定文件名的txt文件;
- * 得到这个文件可以通过运行以下命令：ls | sort -t. -k1.1n >src.txt
+ * 得到这个文件可以通过运行getSrcTxt.sh获得
  * @param reportPath 比对报告保存路径
  * @param paths[0]原图路径，path[1]和path[2]指定要比对的路径
  */
