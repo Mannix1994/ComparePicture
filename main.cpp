@@ -68,32 +68,36 @@ void help(){
                    "./ComparePicture -n 8 -s ./report -p ./原图/src.txt "
                    "./图片组1/src.txt ./图片组2/src.txt\n\n\n"
     );
-    printf("获取以上提到的txt文件，运行getNames.sh获得;"
-                   "图片需要用数字命名且格式需要为bmp(也可在脚本中"
-                   "更改为其他类型)\n");
-    printf("生成脚本getNames.sh中:\n");
-    ofstream o("getNames.sh");
+    printf("获取以上提到的txt文件，运行getSrcTxt.sh获得。\n\n");
+    printf("生成脚本getSrcTxt.sh中:\n");
+    ofstream o("getSrcTxt.sh");
     o<< "#!/usr/bin/env bash\n"
             "\n"
             "if [ $# = 0 ];then\n"
-            "   echo '调用方法:./getSrcTxt.sh path(图片目录相对路径)'\n"
+            "   echo '调用方法:./getSrcTxt.sh path type'\n"
+            "   echo 'path:图片目录相对路径;type:图片类型比如bmp、jpeg等。'\n"
+            "   echo '文件夹中的图片需要用数字命名，才能正确的排序。'\n"
             "else \n"
-            "   if [ $# = 1 ];then\n"
-            "       if [ -f \"$1/src.txt\" ];\n"
-            "       then\n"
-            "           rm \"$1/src.txt\"\n"
+            "   if [ $# = 2 ];then\n"
+            "       if [ ! -d \"$1\" ];then\n"
+            "           echo \"不存在目录:$1\"\n"
+            "           exit -1\n"
             "       fi\n"
             "\n"
             "       cd \"$1\"\n"
             "\n"
-            "       for a in $(ls *.bmp|sort -t. -k1.1n);\n"
+            "       if [ -f \"src.txt\" ];then\n"
+            "           rm \"src.txt\"\n"
+            "       fi\n"
+            "\n"
+            "       for a in $(ls *.$2|sort -t. -k1.1n);\n"
             "       do\n"
             "           echo \"$PWD/$a\" >>src.txt\n"
             "       done\n"
             "\n"
             "       cd ..\n"
             "   else\n"
-            "       echo '参数太多。如果路径中间有空格，请用在路径开头和结尾打上英文双引号。'\n"
+            "       echo '参数不正确。如果路径中间有空格，请用在路径开头和结尾打上英文双引号。'\n"
             "   fi\n"
             "fi"<<endl;
     o.close();
