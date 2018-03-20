@@ -2,6 +2,8 @@
 #include "opencv2/highgui/highgui.hpp"
 #include <fstream>
 #include <unistd.h>
+#include <string>
+#include <vector>
 #include <map>
 #include "tools.h"
 #include "CompareMats.h"
@@ -10,9 +12,11 @@ using namespace std;
 using namespace cv;
 
 int str2int(string str);
+double str2double(string str);
 void help();
-void compare(int count,string reportPath,vector<string> paths);
+void compare(int count,string reportPath,vector<double> baseValueArray,vector<string> paths);
 void parse(int argc,char** argv,map<string,vector<string>> &args);
+void split(const std::string& s, std::vector<std::string>& v, const std::string& c);
 
 int main( int argc, char** argv )
 {
@@ -42,6 +46,13 @@ int main( int argc, char** argv )
     auto count = str2int(args["-n"][0]);
     ASSERT(count>0,"要比对的图片组数数量小于1");
 
+    //提取基础数值数组
+    vector<string> num_arr = args["-c"];
+    vector<double> nums;
+    for(int i=0;i<num_arr.size();i++){
+        nums.push_back(str2double(num_arr[i]));
+    }
+
     //提取路径
     vector<string> paths = args["-p"];
 //    for(int i=0;i<paths.size();i++){
@@ -49,23 +60,25 @@ int main( int argc, char** argv )
 //    }
 //    cout<<endl;
 
-    compare(count,reportPath,paths);
+    compare(count,reportPath,nums,paths);
 
     return 0;
 }
 
 void help(){
-    printf("调用方法: ./ComparePicture -n number -s reportPath -p path0.txt path1.txt path2.txt\n"
+    printf("调用方法: ./ComparePicture -n number -s reportPath -c color -p path1.txt path2.txt\n"
                    "\n"
                    "-n number 要比对的图片数量;\n"
                    "-s save_path 指定比对报告保存路径;\n"
-                   "-p path0.txt是原图相对于当前目录的图片路径，\n"
-                   "一张图片的路径为一行;path1.txt和path2.txt\n"
-                   "分别指定要比对的两组图片的路径。-p必须为最\n后一"
-                   "个参数.\n"
+                   "-c number_array 指定比较的基础数值数组,英文逗号分割;当\n"
+                   "两张图不一样时，再和这个数组比较,和基础值相同的标记为蓝色，\n"
+                   "不相同的标记为绿色，如果两个都和基础值不同，标记为黄色。有\n"
+                   "几个通道就要输入几个以逗号分隔的值。\n"
+                   "-p path1.txt和path2.txt分别指定要比对的两组图片的路径。\n"
+                   "-p必须为最后一个参数.\n"
                    "\n"
                    "调用demo:\n"
-                   "./ComparePicture -n 8 -s ./report -p ./原图/src.txt "
+                   "./ComparePicture -n 8 -s ./report -c 255,255,0 -p ./原图/src.txt "
                    "./图片组1/src.txt ./图片组2/src.txt\n\n\n"
     );
     printf("获取以上提到的txt文件，运行getNames.sh获得;"
@@ -110,7 +123,7 @@ void help(){
 void parse(int argc,char** argv,map<string,vector<string>> &args){
 
     //检查参数数量
-    ASSERT(argc==9,"参数数量不正确");
+    ASSERT(argc==10,"参数数量不正确");
 
     for(int i=1;i<argc;i++){
         if(argv[i][0]=='-'){
@@ -127,12 +140,19 @@ void parse(int argc,char** argv,map<string,vector<string>> &args){
                 value.emplace_back(argv[++i]);
                 args.insert(make_pair("-s",value));
             }
+            else if(strcmp(argv[i],"-c")==0){//number_array
+                ASSERT(args.count("-c")==0,"参数-c重复");
+                vector<string> num_arr;
+                split(argv[++i],num_arr,",");
+//                cout<<num_arr[0]<<num_arr[1]<<num_arr[2]<<endl;
+                args.insert(make_pair("-c",num_arr));
+            }
             else if(strcmp(argv[i],"-p")==0){//各组图片路径
                 ASSERT(args.count("-p")==0,"参数-p重复");
                 vector<string> value;
                 for(int j=++i;j<argc;j++)
                     value.emplace_back(argv[j]);
-                ASSERT(value.size()==3,"输入路径不等于三个");
+                ASSERT(value.size()==2,"输入路径不等于两个");
                 args.insert(make_pair("-p",value));
                 break;
             }
@@ -146,6 +166,21 @@ void parse(int argc,char** argv,map<string,vector<string>> &args){
     }
 }
 
+void split(const std::string& s, std::vector<std::string>& v, const std::string& c)
+{
+    std::string::size_type pos1, pos2;
+    pos2 = s.find(c);
+    pos1 = 0;
+    while(std::string::npos != pos2)
+    {
+        v.push_back(s.substr(pos1, pos2-pos1));
+
+        pos1 = pos2 + c.size();
+        pos2 = s.find(c, pos1);
+    }
+    if(pos1 != s.length())
+        v.push_back(s.substr(pos1));
+}
 /**
  * 字符数组转数字
  * @param str 数字字符数组，例如 char str[]="123";
@@ -176,6 +211,16 @@ int str2int(string str){
     return num;
 }
 
+double str2double(string str){
+    stringstream stream(str);
+    double num;
+    stream>>num;
+    if(!stream.eof()){
+        throw runtime_error("数字"+str+"不正确，请检查参数");
+    }
+    return num;
+}
+
 string getRealPath(string path){
     char buffer[500];
     getcwd(buffer,500);
@@ -190,7 +235,7 @@ string getRealPath(string path){
  * @param reportPath 比对报告保存路径
  * @param paths[0]原图路径，path[1]和path[2]指定要比对的路径
  */
-void compare(int count,string reportPath,vector<string> paths){
+void compare(int count,string reportPath,vector<double> baseValueArray,vector<string> paths){
 
     //初始化各个文件夹内指定图片名字的txt文件的输入流
     vector<ifstream> nameStreams;
@@ -201,26 +246,23 @@ void compare(int count,string reportPath,vector<string> paths){
         }
     }
 
-    string name0,name1,name2;
+    string name1,name2;
     ofstream o(reportPath+"/统计.txt");
     for(int i=0;i<count;i++){
 
-        getline(nameStreams[0],name0);
-        getline(nameStreams[1],name1);
-        getline(nameStreams[2],name2);
+        getline(nameStreams[0],name1);
+        getline(nameStreams[1],name2);
 
 //        name0 = getRealPath(name0);
 //        cout<<name0<<endl<<name1<<endl<<name2<<endl;
 
-        Mat mat0 = imread(name0);
         Mat mat1 = imread(name1);
         Mat mat2 = imread(name2);
 
-        ASSERT(!mat0.empty(), "不存在："+name0);
         ASSERT(!mat1.empty(), "不存在："+name1);
         ASSERT(!mat2.empty(), "不存在："+name2);
 
-        CompareMats ci(mat0,mat1,mat2);
+        CompareMats ci(baseValueArray,mat1,mat2);
         cout<<"第"<<i+1<<":"<<ci.report()<<endl;
         o<<"第"<<i+1<<":"<<ci.report()<<endl;
         ci.saveReport(reportPath+"/"+to_string(i+1));
@@ -228,5 +270,4 @@ void compare(int count,string reportPath,vector<string> paths){
 
     nameStreams[0].close();
     nameStreams[1].close();
-    nameStreams[2].close();
 }

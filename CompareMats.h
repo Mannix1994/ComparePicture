@@ -14,7 +14,7 @@ public:
      * @param mat1 Mat1
      * @param mat2 Mat2
      */
-    CompareMats(cv::Mat mat0,cv::Mat mat1, cv::Mat mat2);
+    CompareMats(std::vector<double> baseValueArray,const cv::Mat mat1, const cv::Mat mat2);
     /**
      * 返回比对报告，包含两个mat是否相同，相同点数量，不同点数量
      * @return 比对报告
@@ -74,6 +74,9 @@ private:
      * @return 相同返回true，否则返回false
      */
     inline bool equal(cv::Vec2f a, cv::Vec2f b);
+
+    inline bool equalWithBVA(cv::Vec3b b);
+    inline bool equalWithBVA(cv::Vec2f b);
     /**
      * 设置mask的颜色
      * @param i 列
@@ -89,7 +92,7 @@ private:
     bool _same;
     std::vector<cv::Point> _differentPoints;
     cv::Mat _mask;
-    cv::Mat _origin;
+    std::vector<double> _baseValueArray;
 };
 
 
