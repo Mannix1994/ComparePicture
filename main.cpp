@@ -247,7 +247,8 @@ void compare(int count,string reportPath,vector<double> baseValueArray,vector<st
     }
 
     string name1,name2;
-    ofstream o(reportPath+"/统计.txt");
+    ofstream o(reportPath+"/统计.csv");
+    o<<"序号,相同,相同点数量,不同点数量"<<endl;
     for(int i=0;i<count;i++){
 
         getline(nameStreams[0],name1);
@@ -264,7 +265,7 @@ void compare(int count,string reportPath,vector<double> baseValueArray,vector<st
 
         CompareMats ci(baseValueArray,mat1,mat2);
         cout<<"第"<<i+1<<":"<<ci.report()<<endl;
-        o<<"第"<<i+1<<":"<<ci.report()<<endl;
+        o<<i+1<<","<<ci.same()<<","<<ci.sameCount()<<","<<ci.differentCount()<<endl;
         ci.saveReport(reportPath+"/"+to_string(i+1));
     }
 
