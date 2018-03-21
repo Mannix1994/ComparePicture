@@ -74,23 +74,23 @@ void help(){
     o<< "#!/usr/bin/env bash\n"
             "\n"
             "if [ $# = 0 ];then\n"
-            "   echo '调用方法:./getSrcTxt.sh path type'\n"
+            "   echo '调用方法:./getSrcTxt.sh type path'\n"
             "   echo 'path:图片目录相对路径;type:图片类型比如bmp、jpeg等。'\n"
             "   echo '文件夹中的图片需要用数字命名，才能正确的排序。'\n"
             "else \n"
             "   if [ $# = 2 ];then\n"
-            "       if [ ! -d \"$1\" ];then\n"
-            "           echo \"不存在目录:$1\"\n"
+            "       if [ ! -d \"$2\" ];then\n"
+            "           echo \"不存在目录:$2\"\n"
             "           exit -1\n"
             "       fi\n"
             "\n"
-            "       cd \"$1\"\n"
+            "       cd \"$2\"\n"
             "\n"
             "       if [ -f \"src.txt\" ];then\n"
             "           rm \"src.txt\"\n"
             "       fi\n"
             "\n"
-            "       for a in $(ls *.$2|sort -t. -k1.1n);\n"
+            "       for a in $(ls *.$1|sort -t. -k1.1n);\n"
             "       do\n"
             "           echo \"$PWD/$a\" >>src.txt\n"
             "       done\n"
@@ -101,7 +101,7 @@ void help(){
             "   fi\n"
             "fi"<<endl;
     o.close();
-    system("chmod +x getNames.sh");
+    system("chmod +x getSrcTxt.sh");
     printf("生成完成\n");
 }
 
