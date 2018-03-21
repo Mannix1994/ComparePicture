@@ -99,7 +99,7 @@ void help(){
             "   fi\n"
             "fi"<<endl;
     o.close();
-    system("chmod +x getNames.sh");
+    system("chmod +x getSrcTxt.sh");
     printf("生成完成\n");
 }
 
