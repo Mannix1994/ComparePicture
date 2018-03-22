@@ -1,6 +1,3 @@
-//
-// Created by creator on 18-3-13.
-//
 
 #include "CompareMats.h"
 #include "tools.h"
@@ -8,19 +5,38 @@
 
 using namespace cv;
 using namespace std;
-
+using namespace Utils;
 
 CompareMats::CompareMats(const cv::Mat mat0, const cv::Mat mat1) :
         _sameCount(0), _differentCount(0), _same(true) {
-    ASSERT(!mat0.empty(), "mat1指定的图片为空");
-    ASSERT(!mat1.empty(), "mat2指定的图片为空");
-    ASSERT(mat0.size() == mat1.size(), "图的大小不一致");
-    ASSERT(mat0.type() == mat1.type(), "图的类型不一致");
+    ASSERT(!mat0.empty(), "mat0指定的图片为空");
+    ASSERT(!mat1.empty(), "mat1指定的图片为空");
+    ASSERT(mat0.size() == mat1.size(), "mat0和mat1大小不一致");
+    ASSERT(mat0.type() == mat1.type(), "mat0和mat1的类型不一致");
+    switch (mat0.type()) {
+        case CV_8UC1: {
+            vector<Mat> mats;
+            for (int i = 0; i < 3; i++) {
+                mats.push_back(mat0);
+            }
+            merge(mats, _mask);
+            break;
+        }
+        case CV_8UC3:
+            _mask = mat0.clone();
+            break;
+        case CV_8UC4:
+            cvtColor(mat0, _mask, CV_BGRA2BGR);
+            break;
+        default:
+            _mask = Mat(mat0.size(), CV_8UC3);
+            break;
+    }
     compare(mat0, mat1);
 }
 
 std::string CompareMats::report() {
-    if(_same)
+    if (_same)
         return "是否相同:是, 相同点数量:" + to_string(_sameCount) + ", 不同点数量:" + to_string(_differentCount);
     else
         return "是否相同:否, 相同点数量:" + to_string(_sameCount) + ", 不同点数量:" + to_string(_differentCount);
@@ -31,113 +47,56 @@ bool CompareMats::same() {
     return _same;
 }
 
+/**
+ * 比较Mat是否相同;
+ * 这个函数利用了非常巧妙的方式来比较不同类型的mat;不管mat里面存储的是单通道
+ * 还是多通道，通道分量的类型uchar、int、float还是double，mat中的每个元素所
+ * 占内存总是uchar(8位)的整数倍，因此，可以把该元素看成一个uchar数组。箬要比
+ * 较两个mat中对应位置的元素是否相等，可以先求得各自指向该元素的uchar数组的首
+ * 地址，然后用一个for循环来比较这两个数组，若完全相同，则这两个mat中对应位置
+ * 的元素是相等的，否则，不相等。
+ * @param mat1 mat1
+ * @param mat2 mat2
+ */
 void CompareMats::compare(const Mat mat1, const Mat mat2) {
-    switch (mat1.type()) {
-        case CV_8UC3://uchar3
-        {
-            _mask = mat1.clone();
-            for (int i = 0; i < mat1.cols; i++) {
-                for (int j = 0; j < mat1.rows; j++) {
-                    const auto &c1 = mat1.at<Vec3b>(j, i);
-                    const auto &c2 = mat2.at<Vec3b>(j, i);
-                    if (equal(c1, c2)) {
-                        _sameCount++;
-                    } else {
-                        _differentCount++;
-                        _differentPoints.emplace_back(Point(i, j));
-
-                        _mask.at<Vec3b>(j,i) = Vec3b(0,255,255);
-                    }
+    //mat(i,j)，也就是一个元素，所占的字节数
+    //参考链接：http://blog.csdn.net/dcrmg/article/details/52294259
+    size_t elemSize = mat1.elemSize();
+    uchar *ptrCols1;//mat1行首指针
+    uchar *ptrCols2;//mat2行首指针
+    uchar *array1;//mat1元数数组首指针
+    uchar *array2;//mat1元数数组首指针
+    for (int i = 0; i < mat1.rows; i++) {
+        //获取每行行首的指针
+        ptrCols1 = const_cast<uchar *>(mat1.ptr<uchar>(i));
+        ptrCols2 = const_cast<uchar *>(mat2.ptr<uchar>(i));
+        for (int j = 0; j < mat1.cols; j++) {
+            //获取(i,j)元素对应数组的指针
+            array1 = ptrCols1 + j * elemSize;
+            array2 = ptrCols2 + j * elemSize;
+            //判断是否相等
+            bool tag = true;
+            for (int ii = 0; ii < elemSize; ii++) {
+                if (array1[ii] != array2[ii]) {
+                    tag = false;
+                    break;
                 }
             }
-            break;
-        }
-        case CV_8UC1://uchar
-        {
-            //合并为三通道的图像
-            vector<Mat> masks;
-            masks.push_back(mat1);
-            masks.push_back(mat1);
-            masks.push_back(mat1);
-            merge(masks, _mask);
+            //
+            if (tag) {//相等
+                _sameCount++;
+            } else {//不等
+                _differentCount++;
+                _differentPoints.emplace_back(Point(i, j));
 
-            for (int i = 0; i < mat1.cols; i++) {
-                for (int j = 0; j < mat1.rows; j++) {
-                    uchar c1 = mat1.at<uchar>(j, i);
-                    uchar c2 = mat2.at<uchar>(j, i);
-                    if (c1==c2) {
-                        _sameCount++;
-                    } else {
-                        _differentCount++;
-                        _differentPoints.emplace_back(Point(i, j));
-
-                        _mask.at<Vec3b>(j,i) = Vec3b(0,255,255);
-                    }
-                }
+                _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
             }
-            break;
         }
-        case CV_32FC2://float2
-        {
-            _mask = Mat(mat1.size(), CV_8UC3, Scalar(0, 0, 0));
-            for (int i = 0; i < mat1.cols; i++) {
-                for (int j = 0; j < mat1.rows; j++) {
-                    const auto &c1 = mat1.at<Vec2f>(j, i);
-                    const auto &c2= mat2.at<Vec2f>(j, i);
-                    if (equal(c1,c2)) {
-                        _sameCount++;
-                    } else {
-                        _differentCount++;
-                        _differentPoints.emplace_back(Point(i, j));
-
-                        _mask.at<Vec3b>(j,i) = Vec3b(0,255,255);
-                    }
-                }
-            }
-            break;
-        }
-        case CV_32FC1://float
-        {
-            _mask = Mat(mat1.size(), CV_8UC3, Scalar(0, 0, 0));
-            for (int i = 0; i < mat1.cols; i++) {
-                for (int j = 0; j < mat1.rows; j++) {
-                    float c1 = mat1.at<float>(j, i);
-                    float c2 = mat2.at<float>(j, i);
-                    if (abs(c1 - c2) < 1e-5) {
-                        _sameCount++;
-                    } else {
-                        _differentCount++;
-                        _differentPoints.emplace_back(Point(i, j));
-
-                        _mask.at<Vec3b>(j,i) = Vec3b(0,255,255);
-                    }
-                }
-            }
-            break;
-        }
-        case CV_32SC1://int
-        {
-            _mask = Mat(mat1.size(), CV_8UC3, Scalar(0, 0, 0));
-            for (int i = 0; i < mat1.cols; i++) {
-                for (int j = 0; j < mat1.rows; j++) {
-                    int c1 = mat1.at<int>(j, i);
-                    int c2 = mat2.at<int>(j, i);
-                    if (c1 == c2) {
-                        _sameCount++;
-                    } else {
-                        _differentCount++;
-                        _differentPoints.emplace_back(Point(i, j));
-
-                        _mask.at<Vec3b>(j,i) = Vec3b(0,255,255);
-                    }
-                }
-            }
-            break;
-        }
-        default:
-            ASSERT(false, "不支持的Mat类型");
-            break;
     }
+    ptrCols1 = nullptr;
+    ptrCols2 = nullptr;
+    array1 = nullptr;
+    array2 = nullptr;
 
     if (_differentCount > 0) {
         _same = false;
@@ -146,14 +105,6 @@ void CompareMats::compare(const Mat mat1, const Mat mat2) {
 
 Mat CompareMats::mask() {
     return _mask;
-}
-
-inline bool CompareMats::equal(cv::Vec3b a, cv::Vec3b b) {
-    return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
-}
-
-inline bool CompareMats::equal(cv::Vec2f a, cv::Vec2f b) {
-    return abs(a[0] - b[0]) < 1e-5 && abs(a[1] - b[1]) < 1e-5;
 }
 
 vector<cv::Point> CompareMats::points() {
@@ -169,7 +120,7 @@ long long CompareMats::differentCount() {
 }
 
 void CompareMats::saveReport(std::string fileName) {
-    ofstream o(fileName+".txt");
+    ofstream o(fileName + ".txt");
 
     ASSERT(o.is_open(), "新建文件失败");
 
@@ -184,12 +135,12 @@ void CompareMats::saveReport(std::string fileName) {
 
     for (int i = 0; i < _differentPoints.size(); i++) {
         o << _differentPoints[i] << ",\t";
-        if ((i+1) % 10 == 0)//存10个点就换行
+        if ((i + 1) % 10 == 0)//存10个点就换行
             o << endl;
     }
     o.close();
 
-    imwrite(fileName+".bmp",_mask);
-    
-    cout<<"报告已保存到"+fileName+".txt和"+fileName+".bmp"<<endl;
+    imwrite(fileName + ".bmp", _mask);
+
+    cout << "报告已保存到" + fileName + ".txt和" + fileName + ".bmp" << endl;
 }

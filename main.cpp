@@ -219,7 +219,7 @@ void compare(int count,string reportPath,vector<string> paths){
         ASSERT(!mat0.empty(), "不存在："+name0);
         ASSERT(!mat1.empty(), "不存在："+name1);
 
-        CompareMats ci(mat0,mat1);
+        Utils::CompareMats ci(mat0,mat1);
         cout<<"第"<<i+1<<":"<<ci.report()<<endl;
         o<<i+1<<","<<ci.same()<<","<<ci.sameCount()<<","<<ci.differentCount()<<endl;
         ci.saveReport(reportPath+"/"+to_string(i+1));
