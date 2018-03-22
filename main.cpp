@@ -1,5 +1,4 @@
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
+#include <opencv2/opencv.hpp>
 #include <fstream>
 #include <unistd.h>
 #include <map>
@@ -134,7 +133,7 @@ void parse(int argc,char** argv,map<string,vector<string>> &args){
                 vector<string> value;
                 for(int j=++i;j<argc;j++)
                     value.emplace_back(argv[j]);
-                ASSERT(value.size()==2,"输入路径不等于三个");
+                ASSERT(value.size()==2,"输入路径不等于两个");
                 args.insert(make_pair("-p",value));
                 break;
             }
@@ -158,7 +157,7 @@ long charArray2Long(char *str){
     long num = strtol(str,&stop,10);
     if(strlen(stop)>0){
         printf("字符数组:%s含有非法字符\n",str);
-        throw runtime_error("非法字符，转换为数字失败");
+        ASSERT(false,"非法字符，转换为数字失败");
     }
     return num;
 }
@@ -173,7 +172,7 @@ int str2int(string str){
     int num;
     stream>>num;
     if(!stream.eof()){
-        throw runtime_error("数字"+str+"不正确，请检查参数");
+        ASSERT(false,"数字"+str+"不正确，请检查参数");
     }
     return num;
 }
@@ -189,10 +188,8 @@ string getRealPath(string path){
  * @param count 要比对图片的组数
  * @param txtName 各个文件夹中指定文件名的txt文件;
  * 得到这个文件可以通过运行getSrcTxt.sh获得
- * @param txtName 各个文件夹中指图片名的txt文件;
- * 得到这个文件可以通过运行getSrcTxt.sh获得
  * @param reportPath 比对报告保存路径
- * @param ，path[1]和path[2]指定包含目录中图片的路径txt
+ * @param paths path[1]和path[2]指定包含目录中图片的路径txt
  */
 void compare(int count,string reportPath,vector<string> paths){
 
