@@ -49,54 +49,102 @@ bool CompareMats::same() {
 
 /**
  * 比较Mat是否相同;
- * 这个函数利用了非常巧妙的方式来比较不同类型的mat;不管mat里面存储的是单通道
- * 还是多通道，通道分量的类型uchar、int、float还是double，mat中的每个元素所
- * 占内存总是uchar(8位)的整数倍，因此，可以把该元素看成一个uchar数组。箬要比
- * 较两个mat中对应位置的元素是否相等，可以先求得各自指向该元素的uchar数组的首
- * 地址，然后用一个for循环来比较这两个数组，若完全相同，则这两个mat中对应位置
- * 的元素是相等的，否则，不相等。
  * @param mat1 mat1
  * @param mat2 mat2
  */
 void CompareMats::compare(const Mat mat1, const Mat mat2) {
-    //mat(i,j)，也就是一个元素，所占的字节数
-    //参考链接：http://blog.csdn.net/dcrmg/article/details/52294259
-    size_t elemSize = mat1.elemSize();
-    uchar *ptrCols1;//mat1行首指针
-    uchar *ptrCols2;//mat2行首指针
-    uchar *array1;//mat1元数数组首指针
-    uchar *array2;//mat1元数数组首指针
-    for (int i = 0; i < mat1.rows; i++) {
-        //获取每行行首的指针
-        ptrCols1 = const_cast<uchar *>(mat1.ptr<uchar>(i));
-        ptrCols2 = const_cast<uchar *>(mat2.ptr<uchar>(i));
-        for (int j = 0; j < mat1.cols; j++) {
-            //获取(i,j)元素对应数组的指针
-            array1 = ptrCols1 + j * elemSize;
-            array2 = ptrCols2 + j * elemSize;
-            //判断是否相等
-            bool tag = true;
-            for (int ii = 0; ii < elemSize; ii++) {
-                if (array1[ii] != array2[ii]) {
-                    tag = false;
-                    break;
+    switch (mat1.type()) {
+        case CV_8UC3://uchar3
+        {
+            _mask = mat1.clone();
+            for (int i = 0; i < mat1.cols; i++) {
+                for (int j = 0; j < mat1.rows; j++) {
+                    const auto &c1 = mat1.at<Vec3b>(j, i);
+                    const auto &c2 = mat2.at<Vec3b>(j, i);
+                    if (equal(c1, c2)) {
+                        _sameCount++;
+                    } else {
+                        _differentCount++;
+                        _differentPoints.emplace_back(Point(i, j));
+
+                        _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
+                    }
                 }
             }
-            //
-            if (tag) {//相等
-                _sameCount++;
-            } else {//不等
-                _differentCount++;
-                _differentPoints.emplace_back(Point(i, j));
+            break;
+        }
+        case CV_8UC1://uchar
+        {
+            for (int i = 0; i < mat1.cols; i++) {
+                for (int j = 0; j < mat1.rows; j++) {
+                    uchar c1 = mat1.at<uchar>(j, i);
+                    uchar c2 = mat2.at<uchar>(j, i);
+                    if (c1 == c2) {
+                        _sameCount++;
+                    } else {
+                        _differentCount++;
+                        _differentPoints.emplace_back(Point(i, j));
 
-                _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
+                        _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
+                    }
+                }
             }
+            break;
+        }
+        default:
+        {
+            /**
+             * 这个部分利用了非常巧妙的方式来比较不同类型的mat;不管mat里面存储的是单通道
+             * 还是多通道，通道分量的类型uchar、int、float还是double，mat中的每个元素所
+             * 占内存总是uchar(8位)的整数倍，因此，可以把该元素看成一个uchar数组。箬要比
+             * 较两个mat中对应位置的元素是否相等，可以先求得各自指向该元素的uchar数组的首
+             * 地址，然后用一个for循环来比较这两个数组，若完全相同，则这两个mat中对应位置
+             * 的元素是相等的，否则，不相等。
+             * 用来比较jpeg格式的图片时会出错。
+             */
+
+            //参考链接：http://blog.csdn.net/dcrmg/article/details/52294259
+            size_t elemSize = mat1.elemSize();//mat(i,j)，也就是一个元素，所占的字节数
+            uchar *ptrCols1 = nullptr;//mat1行首指针
+            uchar *ptrCols2 = nullptr;//mat2行首指针
+            uchar *array1 = nullptr;//mat1元数数组首指针
+            uchar *array2 = nullptr;//mat1元数数组首指针
+
+            for (int i = 0; i < mat1.rows; i++) {
+                //获取每行行首的指针
+                ptrCols1 = const_cast<uchar *>(mat1.ptr<uchar>(i));
+                ptrCols2 = const_cast<uchar *>(mat2.ptr<uchar>(i));
+                for (int j = 0; j < mat1.cols; j++) {
+                    //获取(i,j)元素对应数组的指针
+                    array1 = ptrCols1 + j * elemSize;
+                    array2 = ptrCols2 + j * elemSize;
+                    //判断是否相等
+                    bool tag = true;
+                    for (int ii = 0; ii < elemSize; ii++) {
+                        if (array1[ii] != array2[ii]) {
+                            tag = false;
+                            break;
+                        }
+                    }
+                    //
+                    if (tag) {//相等
+                        _sameCount++;
+                    } else {//不等
+                        _differentCount++;
+                        _differentPoints.emplace_back(Point(i, j));
+
+                        _mask.at<Vec3b>(i, j) = Vec3b(0, 255, 255);
+                    }
+                }
+            }
+            ptrCols1 = nullptr;
+            ptrCols2 = nullptr;
+            array1 = nullptr;
+            array2 = nullptr;
+
+            break;
         }
     }
-    ptrCols1 = nullptr;
-    ptrCols2 = nullptr;
-    array1 = nullptr;
-    array2 = nullptr;
 
     if (_differentCount > 0) {
         _same = false;
@@ -143,4 +191,8 @@ void CompareMats::saveReport(std::string fileName) {
     imwrite(fileName + ".bmp", _mask);
 
     cout << "报告已保存到" + fileName + ".txt和" + fileName + ".bmp" << endl;
+}
+
+bool CompareMats::equal(cv::Vec3b a, cv::Vec3b b) {
+    return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
 }

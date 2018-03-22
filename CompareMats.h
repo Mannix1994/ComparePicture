@@ -67,6 +67,13 @@ namespace Utils {
          * @param mat2 Mat2
          */
         void compare(cv::Mat mat1, cv::Mat mat2);
+        /**
+         * 比较a是否等于b
+         * @param a a
+         * @param b b
+         * @return 相同返回true，否则返回false
+         */
+        inline bool equal(cv::Vec3b a, cv::Vec3b b);
 
     private:
         long long _sameCount;
