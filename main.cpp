@@ -55,17 +55,15 @@ int main( int argc, char** argv )
 }
 
 void help(){
-    printf("调用方法: ./ComparePicture -n number -s reportPath -p path0.txt path1.txt path2.txt\n"
+    printf("调用方法: ./ComparePicture -n number -s reportPath -p path1.txt path2.txt\n"
                    "\n"
                    "-n number 要比对的图片数量;\n"
                    "-s save_path 指定比对报告保存路径;\n"
-                   "-p path0.txt是原图相对于当前目录的图片路径，\n"
-                   "一张图片的路径为一行;path1.txt和path2.txt\n"
-                   "分别指定要比对的两组图片的路径。-p必须为最\n后一"
-                   "个参数.\n"
+                   "-p txt中一张图片的路径为一行;path1.txt和path2.txt\n"
+                   "分别指定要比对的两组图片的路径。-p必须为最后一个参数.\n"
                    "\n"
                    "调用demo:\n"
-                   "./ComparePicture -n 8 -s ./report -p ./原图/src.txt "
+                   "./ComparePicture -n 8 -s ./report -p "
                    "./图片组1/src.txt ./图片组2/src.txt\n\n\n"
     );
     printf("获取以上提到的txt文件，运行getSrcTxt.sh获得。\n\n");
@@ -114,7 +112,7 @@ void help(){
 void parse(int argc,char** argv,map<string,vector<string>> &args){
 
     //检查参数数量
-    ASSERT(argc==9,"参数数量不正确");
+    ASSERT(argc==8,"参数数量不正确");
 
     for(int i=1;i<argc;i++){
         if(argv[i][0]=='-'){
@@ -136,7 +134,7 @@ void parse(int argc,char** argv,map<string,vector<string>> &args){
                 vector<string> value;
                 for(int j=++i;j<argc;j++)
                     value.emplace_back(argv[j]);
-                ASSERT(value.size()==3,"输入路径不等于三个");
+                ASSERT(value.size()==2,"输入路径不等于三个");
                 args.insert(make_pair("-p",value));
                 break;
             }
@@ -191,8 +189,10 @@ string getRealPath(string path){
  * @param count 要比对图片的组数
  * @param txtName 各个文件夹中指定文件名的txt文件;
  * 得到这个文件可以通过运行getSrcTxt.sh获得
+ * @param txtName 各个文件夹中指图片名的txt文件;
+ * 得到这个文件可以通过运行getSrcTxt.sh获得
  * @param reportPath 比对报告保存路径
- * @param paths[0]原图路径，path[1]和path[2]指定要比对的路径
+ * @param ，path[1]和path[2]指定包含目录中图片的路径txt
  */
 void compare(int count,string reportPath,vector<string> paths){
 
@@ -205,27 +205,24 @@ void compare(int count,string reportPath,vector<string> paths){
         }
     }
 
-    string name0,name1,name2;
+    string name0,name1;
     ofstream o(reportPath+"/统计.csv");
     o<<"序号,相同,相同点数量,不同点数量"<<endl;
     for(int i=0;i<count;i++){
 
         getline(nameStreams[0],name0);
         getline(nameStreams[1],name1);
-        getline(nameStreams[2],name2);
 
 //        name0 = getRealPath(name0);
 //        cout<<name0<<endl<<name1<<endl<<name2<<endl;
 
         Mat mat0 = imread(name0);
         Mat mat1 = imread(name1);
-        Mat mat2 = imread(name2);
 
         ASSERT(!mat0.empty(), "不存在："+name0);
         ASSERT(!mat1.empty(), "不存在："+name1);
-        ASSERT(!mat2.empty(), "不存在："+name2);
 
-        CompareMats ci(mat0,mat1,mat2);
+        CompareMats ci(mat0,mat1);
         cout<<"第"<<i+1<<":"<<ci.report()<<endl;
         o<<i+1<<","<<ci.same()<<","<<ci.sameCount()<<","<<ci.differentCount()<<endl;
         ci.saveReport(reportPath+"/"+to_string(i+1));
@@ -233,5 +230,4 @@ void compare(int count,string reportPath,vector<string> paths){
 
     nameStreams[0].close();
     nameStreams[1].close();
-    nameStreams[2].close();
 }

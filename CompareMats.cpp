@@ -10,15 +10,13 @@ using namespace cv;
 using namespace std;
 
 
-CompareMats::CompareMats(cv::Mat mat0,const cv::Mat mat1, const cv::Mat mat2) :
+CompareMats::CompareMats(const cv::Mat mat0, const cv::Mat mat1) :
         _sameCount(0), _differentCount(0), _same(true) {
-    ASSERT(!mat0.empty(), "mat0指定的图片为空");
-    ASSERT(!mat1.empty(), "mat1指定的图片为空");
-    ASSERT(!mat2.empty(), "mat2指定的图片为空");
-    ASSERT(mat0.size() == mat1.size() && mat1.size() == mat2.size(), "图的大小不一致");
-    ASSERT(mat0.type() == mat1.type() && mat1.type() == mat2.type(), "图的类型不一致");
-    _origin = mat0;
-    compare(mat1, mat2);
+    ASSERT(!mat0.empty(), "mat1指定的图片为空");
+    ASSERT(!mat1.empty(), "mat2指定的图片为空");
+    ASSERT(mat0.size() == mat1.size(), "图的大小不一致");
+    ASSERT(mat0.type() == mat1.type(), "图的类型不一致");
+    compare(mat0, mat1);
 }
 
 std::string CompareMats::report() {
@@ -48,11 +46,7 @@ void CompareMats::compare(const Mat mat1, const Mat mat2) {
                         _differentCount++;
                         _differentPoints.emplace_back(Point(i, j));
 
-                        Vec3b c0 = _origin.at<Vec3b>(j,i);
-                        bool tag0 = equal(c0,c1);
-                        bool tag1 = equal(c0,c2);
-
-                        setMaskColor(i,j,tag0,tag1);
+                        _mask.at<Vec3b>(j,i) = Vec3b(0,255,255);
                     }
                 }
             }
@@ -77,10 +71,7 @@ void CompareMats::compare(const Mat mat1, const Mat mat2) {
                         _differentCount++;
                         _differentPoints.emplace_back(Point(i, j));
 
-                        uchar c0 = _origin.at<uchar>(j,i);
-                        bool tag0 = (c0==c1);
-                        bool tag1 = (c0==c2);
-                        setMaskColor(i,j,tag0,tag1);
+                        _mask.at<Vec3b>(j,i) = Vec3b(0,255,255);
                     }
                 }
             }
@@ -99,10 +90,7 @@ void CompareMats::compare(const Mat mat1, const Mat mat2) {
                         _differentCount++;
                         _differentPoints.emplace_back(Point(i, j));
 
-                        Vec2f c0 = _origin.at<Vec2f>(j,i);
-                        bool tag0 = equal(c0,c1);
-                        bool tag1 = equal(c0,c2);
-                        setMaskColor(i,j,tag0,tag1);
+                        _mask.at<Vec3b>(j,i) = Vec3b(0,255,255);
                     }
                 }
             }
@@ -121,10 +109,7 @@ void CompareMats::compare(const Mat mat1, const Mat mat2) {
                         _differentCount++;
                         _differentPoints.emplace_back(Point(i, j));
 
-                        float c0 = _origin.at<float>(j,i);
-                        bool tag0 = (abs(c0-c1)<1e-5);
-                        bool tag1 = (abs(c0-c2)<1e-5);
-                        setMaskColor(i,j,tag0,tag1);
+                        _mask.at<Vec3b>(j,i) = Vec3b(0,255,255);
                     }
                 }
             }
@@ -143,10 +128,7 @@ void CompareMats::compare(const Mat mat1, const Mat mat2) {
                         _differentCount++;
                         _differentPoints.emplace_back(Point(i, j));
 
-                        int c0 = _origin.at<int>(j,i);
-                        bool tag0 = (c0==c1);
-                        bool tag1 = (c0==c2);
-                        setMaskColor(i,j,tag0,tag1);
+                        _mask.at<Vec3b>(j,i) = Vec3b(0,255,255);
                     }
                 }
             }
@@ -210,16 +192,4 @@ void CompareMats::saveReport(std::string fileName) {
     imwrite(fileName+".bmp",_mask);
     
     cout<<"报告已保存到"+fileName+".txt和"+fileName+".bmp"<<endl;
-}
-
-void CompareMats::setMaskColor(int i,int j,bool tag0, bool tag1) {
-    if(!tag0 && !tag1){//两个都不同，标记为黄色点
-        _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 255);
-    }
-    else if(!tag0){//path1指定的图和原图不同
-        _mask.at<Vec3b>(j, i) = Vec3b(0, 255, 0);
-    }
-    else if(!tag1){//path2指定的图和原图不同
-        _mask.at<Vec3b>(j, i) = Vec3b(255, 0, 0);
-    }
 }
