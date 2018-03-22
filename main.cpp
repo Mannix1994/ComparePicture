@@ -1,3 +1,7 @@
+/**
+ * 原图作为基础，比对两组图片
+ */
+
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <fstream>
