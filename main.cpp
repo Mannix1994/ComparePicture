@@ -71,7 +71,8 @@ void help() {
            "bmp是图片的类型，可以换成jpeg、jpg、png等等；\n"
            "sort是排序命令，-n是按数字排序，-t后面的\".\"\n"
            "是分隔符，-k后面的参数指定使用分割后的那一部分来\n"
-           "来排序。\n");
+           "来排序。\n"
+           "图片的名字要使用数字来命名，例如\"123.bmp\".\n");
     /*
     printf("获取以上提到的txt文件，运行getSrcTxt.sh获得。\n\n");
     printf("生成脚本getSrcTxt.sh中:\n");
