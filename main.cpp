@@ -9,9 +9,12 @@ using namespace std;
 using namespace cv;
 
 void help();
+
 int str2int(string str);
+
 void parse(int argc, char **argv, map<string, vector<string>> &args);
-void compare(int count, string reportPath, vector<string> paths);
+
+void compare(int count, const string &reportPath, vector<string> paths);
 
 int main(int argc, char **argv) {
     if (argc == 1) {
@@ -42,10 +45,12 @@ int main(int argc, char **argv) {
 
     //提取路径
     vector<string> paths = args["-p"];
-//    for(int i=0;i<paths.size();i++){
-//        cout<<paths[i]<<" ";
-//    }
-//    cout<<endl;
+    /*
+    for(int i=0;i<paths.size();i++){
+        cout<<paths[i]<<" ";
+    }
+    cout<<endl;
+     */
 
     compare(count, reportPath, paths);
 
@@ -54,16 +59,20 @@ int main(int argc, char **argv) {
 
 void help() {
     printf("调用方法: ./ComparePicture -n number -s reportPath -p path1.txt path2.txt\n"
-                   "\n"
-                   "-n number 要比对的图片数量;\n"
-                   "-s save_path 指定比对报告保存路径;\n"
-                   "-p txt中一张图片的路径为一行;path1.txt和path2.txt\n"
-                   "分别指定要比对的两组图片的路径。-p必须为最后一个参数.\n"
-                   "\n"
-                   "调用demo:\n"
-                   "./ComparePicture -n 8 -s ./report -p "
-                   "./图片组1/src.txt ./图片组2/src.txt\n\n\n"
+           "-n number 要比对的图片数量;\n"
+           "-s save_path 指定比对报告保存路径;\n"
+           "-p txt中一张图片的路径为一行;path1.txt和path2.txt\n"
+           "分别指定要比对的两组图片的路径。-p必须为最后一个参数.\n"
+           "调用demo:\n"
+           "./ComparePicture -n 8 -s ./report -p "
+           "./图片组1/src.txt ./图片组2/src.txt\n\n\n"
     );
+    printf("获取src.txt，可以通过在图片目录下运行命令获取:\n    ls *.bmp | sort -n -t . -k 1 >src.txt\n"
+           "bmp是图片的类型，可以换成jpeg、jpg、png等等；\n"
+           "sort是排序命令，-n是按数字排序，-t后面的\".\"\n"
+           "是分隔符，-k后面的参数指定使用分割后的那一部分来\n"
+           "来排序。\n");
+    /*
     printf("获取以上提到的txt文件，运行getSrcTxt.sh获得。\n\n");
     printf("生成脚本getSrcTxt.sh中:\n");
     ofstream o("getSrcTxt.sh");
@@ -99,6 +108,7 @@ void help() {
     o.close();
     system("chmod +x getSrcTxt.sh");
     printf("生成完成\n");
+    */
 }
 
 /**
@@ -135,12 +145,12 @@ void parse(int argc, char **argv, map<string, vector<string>> &args) {
                 break;
             }
         } else {
-            throw runtime_error("参数格式错误");
+            ASSERT(false,"参数格式错误");
         }
     }
 
     if (args.size() < 3) {
-        throw runtime_error("参数数量不足");
+        ASSERT(false,"参数数量不足");
     }
 }
 
@@ -174,7 +184,7 @@ int str2int(string str) {
     return num;
 }
 
-string getRealPath(string path) {
+string getRealPath(string &path) {
     char buffer[500];
     getcwd(buffer, 500);
     return string(buffer) + "/" + path;
@@ -188,8 +198,8 @@ string getRealPath(string path) {
  * @param reportPath 比对报告保存路径
  * @param paths path[1]和path[2]指定包含目录中图片的路径txt
  */
-void compare(int count, string reportPath, vector<string> paths) {
-
+void compare(int count, const string &reportPath, vector<string> paths) {
+    ASSERT(paths.size() == 2, "文件路径不为2");
     //初始化各个文件夹内指定图片名字的txt文件的输入流
     vector<ifstream> nameStreams;
     for (int i = 0; i < paths.size(); i++) {
@@ -199,26 +209,32 @@ void compare(int count, string reportPath, vector<string> paths) {
         }
     }
 
+    string path_prefix0 = paths[0].substr(0, paths[0].find_last_of('/') + 1);
+    string path_prefix1 = paths[1].substr(0, paths[1].find_last_of('/') + 1);
     string name0, name1;
     ofstream o(reportPath + "/统计.csv");
-    o << "序号,相同,相同点数量,不同点数量" << endl;
+    o << "序号,名称,相同,相同点数量,不同点数量" << endl;
     for (int i = 0; i < count; i++) {
+        if (nameStreams[0].eof() || nameStreams[1].eof())
+            break;
 
         getline(nameStreams[0], name0);
         getline(nameStreams[1], name1);
 
-        Mat mat0 = imread(name0);
-        Mat mat1 = imread(name1);
+        Mat mat0 = imread(path_prefix0 + name0);
+        Mat mat1 = imread(path_prefix1 + name1);
 
-        ASSERT(!mat0.empty(), "不存在：" + name0);
-        ASSERT(!mat1.empty(), "不存在：" + name1);
+        ASSERT(!mat0.empty(), "不存在：" + path_prefix0.append(name0));
+        ASSERT(!mat1.empty(), "不存在：" + path_prefix1.append(name1));
 
         Utils::CompareMats ci(mat0, mat1);
-        cout << "第" << i + 1 << ":" << ci.report() << endl;
-        o << i + 1 << "," << ci.same() << "," << ci.sameCount() << "," << ci.differentCount() << endl;
-        ci.saveReport(reportPath + "/" + to_string(i + 1));
+        cout << "第" << i + 1 << "-" << name0 << "与" << name1 << ":" << ci.report() << endl;
+        o << i + 1 << "," << name0.append("-").append(name1) << "," << ci.same() << "," << ci.sameCount() << ","
+          << ci.differentCount() << endl;
+//        ci.saveReport(reportPath + "/" + to_string(i + 1));
     }
 
     nameStreams[0].close();
     nameStreams[1].close();
+    o.close();
 }

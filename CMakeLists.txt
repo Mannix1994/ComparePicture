@@ -19,8 +19,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../run)	#这一句指定可执行文件的位
 include_directories(${OpenCV_INCLUDE_DIRS})
 #include_directories("/usr/local/include/freetype2")
 
-file(GLOB CURRENT_HEADERS  include/*.* include/lib/*.h)
-file(GLOB CURRENT_SOURCES  source/*.* *.cpp)
+file(GLOB CURRENT_HEADERS  *.h)
+file(GLOB CURRENT_SOURCES  *.cpp)
 
 
 add_executable(${PROJECT_NAME} ${CURRENT_HEADERS} ${CURRENT_SOURCES})
