@@ -206,7 +206,7 @@ void compare(int count, const string &reportPath, vector<string> paths) {
     for (int i = 0; i < paths.size(); i++) {
         nameStreams.emplace_back(ifstream(paths[i], ios::in));
         if (!nameStreams[i].is_open()) {
-            throw runtime_error("打开文件\"" + paths[i] + "\"异常，请检查该文件是否存在");
+            ASSERT(false, "打开文件\"" + paths[i] + "\"异常，请检查该文件是否存在");
         }
     }
 
@@ -225,8 +225,8 @@ void compare(int count, const string &reportPath, vector<string> paths) {
         Mat mat0 = imread(path_prefix0 + name0);
         Mat mat1 = imread(path_prefix1 + name1);
 
-        ASSERT(!mat0.empty(), "不存在：" + path_prefix0.append(name0));
-        ASSERT(!mat1.empty(), "不存在：" + path_prefix1.append(name1));
+        ASSERT(!mat0.empty(), "不存在：" + path_prefix0+name0);
+        ASSERT(!mat1.empty(), "不存在：" + path_prefix1+name1);
 
         Utils::CompareMats ci(mat0, mat1);
         cout << "第" << i + 1 << "-" << name0 << "与" << name1 << ":" << ci.report() << endl;
