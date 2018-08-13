@@ -235,11 +235,11 @@ void compare(int count, const string &reportPath, vector<string> paths) {
 
         Utils::CompareMats ci(mat0, mat1);
         cout << "第" << i + 1 << "-" << name0 << "与" << name1 << ":" << ci.report() << endl;
-        o << i + 1 << "," << name0.append("-").append(name1) << "," << ci.same() << "," << ci.sameCount() << ","
+        o << i + 1 << "," << (name0+"&"+name1) << "," << ci.same() << "," << ci.sameCount() << ","
           << ci.differentCount() << endl;
 //        ci.saveReport(reportPath + "/" + to_string(i + 1));
         if(!ci.same())
-            ci.saveReport(reportPath + "/" + name0 + name1);
+            ci.saveReport(reportPath + "/" + (name0+"&"+name1));
     }
 
     nameStreams[0].close();
