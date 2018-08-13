@@ -215,12 +215,17 @@ void compare(int count, const string &reportPath, vector<string> paths) {
     string name0, name1;
     ofstream o(reportPath + "/统计.csv");
     o << "序号,名称,相同,相同点数量,不同点数量" << endl;
-    for (int i = 0; i < count; i++) {
+    int i;
+    for (i = 0; i < count; i++) {
         if (nameStreams[0].eof() || nameStreams[1].eof())
             break;
 
         getline(nameStreams[0], name0);
         getline(nameStreams[1], name1);
+
+        if(name0.empty() || name1.empty()){
+            break;
+        }
 
         Mat mat0 = imread(path_prefix0 + name0);
         Mat mat1 = imread(path_prefix1 + name1);
@@ -233,9 +238,13 @@ void compare(int count, const string &reportPath, vector<string> paths) {
         o << i + 1 << "," << name0.append("-").append(name1) << "," << ci.same() << "," << ci.sameCount() << ","
           << ci.differentCount() << endl;
 //        ci.saveReport(reportPath + "/" + to_string(i + 1));
+        if(!ci.same())
+            ci.saveReport(reportPath + "/" + name0 + name1);
     }
 
     nameStreams[0].close();
     nameStreams[1].close();
     o.close();
+
+    printf("比对完成：共比对%d项\n",i);
 }
